@@ -11,7 +11,7 @@ class Book(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     cover = models.CharField(max_length=1, choices=STATUS_CHOICES, default="H")
-    inventory = models.PositiveIntegerField()
+    inventory = models.PositiveIntegerField(unique=True)
     daily_fee = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
