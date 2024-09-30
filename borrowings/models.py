@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q, F
+from django.utils import timezone
 
 
 class Borrowing(models.Model):
@@ -33,5 +34,13 @@ class Borrowing(models.Model):
                 | Q(actual_return_date__isnull=True),
                 name="actual return date must be after or "
                 "equal to the borrow date or null",
+            ),
+            # 3. Actual return date, if provided,
+            # must be before or equal to today's date.
+            models.CheckConstraint(
+                condition=Q(actual_return_date__lte=timezone.now().date())
+                | Q(actual_return_date__isnull=True),
+                name="actual return date must be before or "
+                "equal to today's date or null",
             ),
         ]
