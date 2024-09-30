@@ -22,4 +22,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/book-service/", include("books.urls"), name="book"),
     path("api/v1/users/", include("user.urls", namespace="user")),
+    path("api/v1/borrowings-service/", include("borrowings.urls"), name="borrowing"),
 ]
