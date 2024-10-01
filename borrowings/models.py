@@ -2,21 +2,19 @@ from django.db import models
 from django.db.models import Q, F
 from django.utils import timezone
 
+from books.models import Book
+from user.models import User
+
 
 class Borrowing(models.Model):
     borrow_date = models.DateField()
     expected_return_date = models.DateField()
     actual_return_date = models.DateField(blank=True, null=True)
-    book_id = models.IntegerField()
-    user_id = models.IntegerField()
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="borrowings")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="borrowings")
 
     def __str__(self):
-        return (
-            f"Borrowing book {self.book_id} by user {self.user_id}, "
-            f"borrow date: {self.borrow_date}, "
-            f"expected return: {self.expected_return_date}, "
-            f"actual return: {self.actual_return_date or 'not returned yet'}"
-        )
+        return f"{self.user.email} : {self.book.title}, "
 
     class Meta:
         verbose_name_plural = "borrowings"
