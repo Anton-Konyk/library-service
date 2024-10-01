@@ -20,13 +20,3 @@ class BorrowingListSerializer(serializers.ModelSerializer):
             "book",
             "user",
         )
-
-    def validate_book_id(self, value):
-        if not Book.objects.filter(id=value).exists():
-            raise serializers.ValidationError("The book with this ID does not exist.")
-        return value
-
-    def validate_user_id(self, value):
-        if not User.objects.filter(id=value).exists():
-            raise serializers.ValidationError("The user with this ID does not exist.")
-        return value
