@@ -41,4 +41,9 @@ class Borrowing(models.Model):
                 name="actual return date must be before or "
                 "equal to today's date or null",
             ),
+            # 4. Borrow date must be equal to today's date.
+            models.CheckConstraint(
+                condition=Q(borrow_date__exact=timezone.now().date()),
+                name="actual borrow date must be equal to today's date",
+            ),
         ]
