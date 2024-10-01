@@ -20,3 +20,4 @@ class Book(models.Model):
     class Meta:
         verbose_name_plural = "books"
         ordering = ["author", "title"]
+        unique_together = ("title", "author", "cover")
