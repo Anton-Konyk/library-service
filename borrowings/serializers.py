@@ -7,7 +7,8 @@ from user.models import User
 
 
 class BorrowingListSerializer(serializers.ModelSerializer):
-    book = serializers.SerializerMethodField()
+    book = BookSerializer(read_only=True)
+    user = serializers.SlugRelatedField(read_only=True, many=False, slug_field="email")
 
     class Meta:
         model = Borrowing
@@ -17,15 +18,8 @@ class BorrowingListSerializer(serializers.ModelSerializer):
             "expected_return_date",
             "actual_return_date",
             "book",
-            "user_id",
+            "user",
         )
-
-    def get_book(self, obj):
-        try:
-            book = Book.objects.get(id=obj.book_id)
-            return BookSerializer(book).data
-        except Book.DoesNotExist:
-            return None
 
     def validate_book_id(self, value):
         if not Book.objects.filter(id=value).exists():
