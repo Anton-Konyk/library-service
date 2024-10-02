@@ -17,3 +17,10 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return BorrowingCreateSerializer
         return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        book = serializer.validated_data["book"]
+
+        book.inventory -= 1
+        book.save()
+        serializer.save(user=self.request.user)
