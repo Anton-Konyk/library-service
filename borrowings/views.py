@@ -26,7 +26,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             else:
                 filters &= ~Q(actual_return_date__isnull=True)
         if user_id:
-            print(f"user_id: {user_id}")
             filters &= Q(user__id=user_id)
 
         queryset = queryset.filter(filters)
