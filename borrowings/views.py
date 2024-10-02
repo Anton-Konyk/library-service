@@ -1,6 +1,10 @@
 from django.db.models import Q
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from borrowings.models import Borrowing
 from borrowings.serializers import (
@@ -53,3 +57,34 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.inventory -= 1
         book.save()
         serializer.save(user=self.request.user)
+
+
+class BorrowingReturnView(APIView):
+    """Return book function"""
+
+    serializer_class = BorrowingCreateSerializer
+
+    def post(self, request, id):
+        borrowing = get_object_or_404(Borrowing, id=id)
+
+        if borrowing.actual_return_date is None:
+            borrowing.actual_return_date = timezone.now().date()
+            borrowing.book.inventory += 1
+            borrowing.book.save()
+            borrowing.save()
+            return Response(
+                {
+                    "detail": f"User {borrowing.user.email} have "
+                    f"returned book {borrowing.book.title} successfully."
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {
+                    "detail": f"User {borrowing.user.email} "
+                    f"already have returned book {borrowing.book.title} "
+                    f"on {borrowing.actual_return_date}"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
