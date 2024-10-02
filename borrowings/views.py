@@ -35,6 +35,10 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(user=self.request.user)
             return queryset
 
+        if self.action == "retrieve" and not self.request.user.is_staff:
+            queryset = queryset.filter(user=self.request.user)
+            return queryset
+
         return queryset
 
     def get_serializer_class(self):
