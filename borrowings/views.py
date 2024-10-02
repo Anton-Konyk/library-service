@@ -13,10 +13,26 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingListSerializer
     permission_classes = (IsAuthenticated,)
+
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        is_active = self.request.query_params.get("is_active")
+        user_id = self.request.query_params.get("user_id")
+        filters = Q()
+        if is_active:
+            if is_active == "1":
+                filters &= Q(actual_return_date__isnull=True)
+            else:
+                filters &= ~Q(actual_return_date__isnull=True)
+        if user_id:
+            print(f"user_id: {user_id}")
+            filters &= Q(user__id=user_id)
+
+        queryset = queryset.filter(filters)
+
         if self.action == "list" and not self.request.user.is_staff:
-            queryset = self.queryset.filter(user=self.request.user)
+            queryset = queryset.filter(user=self.request.user)
             return queryset
 
         return queryset
