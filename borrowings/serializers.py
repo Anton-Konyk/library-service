@@ -34,3 +34,10 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
             "book",
             "user",
         )
+
+    def validate_book(self, value):
+        if value.inventory == 0:
+            raise serializers.ValidationError(
+                "This book is not available for borrowing as inventory is 0."
+            )
+        return value
