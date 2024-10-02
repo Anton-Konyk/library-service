@@ -7,7 +7,7 @@ from user.models import User
 
 
 class Borrowing(models.Model):
-    borrow_date = models.DateField()
+    borrow_date = models.DateField(auto_now=timezone.now().date())
     expected_return_date = models.DateField()
     actual_return_date = models.DateField(blank=True, null=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="borrowings")
@@ -40,10 +40,5 @@ class Borrowing(models.Model):
                 | Q(actual_return_date__isnull=True),
                 name="actual return date must be before or "
                 "equal to today's date or null",
-            ),
-            # 4. Borrow date must be equal to today's date.
-            models.CheckConstraint(
-                condition=Q(borrow_date__exact=timezone.now().date()),
-                name="actual borrow date must be equal to today's date",
             ),
         ]
