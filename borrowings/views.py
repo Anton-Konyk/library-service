@@ -80,6 +80,11 @@ class BorrowingReturnView(APIView):
             borrowing.book.inventory += 1
             borrowing.book.save()
             borrowing.save()
+
+            telegram_helper = TelegramHelper()
+            message = f"Book '{borrowing.book.title}' has returned by user {borrowing.user.email}."
+            telegram_helper.send_message(message)
+
             return Response(
                 {
                     "detail": f"User {borrowing.user.email} have "
