@@ -11,6 +11,7 @@ from borrowings.serializers import (
     BorrowingListSerializer,
     BorrowingCreateSerializer,
 )
+from helpers.telegram_helper import TelegramHelper
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
@@ -56,7 +57,14 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         book.inventory -= 1
         book.save()
-        serializer.save(user=self.request.user)
+        borrowing = serializer.save(user=self.request.user)
+
+        telegram_helper = TelegramHelper()
+        message = (
+            f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
+            f"Expected return date: {borrowing.expected_return_date}."
+        )
+        telegram_helper.send_message(message)
 
 
 class BorrowingReturnView(APIView):
@@ -72,6 +80,11 @@ class BorrowingReturnView(APIView):
             borrowing.book.inventory += 1
             borrowing.book.save()
             borrowing.save()
+
+            telegram_helper = TelegramHelper()
+            message = f"Book '{borrowing.book.title}' has returned by user {borrowing.user.email}."
+            telegram_helper.send_message(message)
+
             return Response(
                 {
                     "detail": f"User {borrowing.user.email} have "
