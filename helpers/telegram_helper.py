@@ -19,7 +19,6 @@ class TelegramHelper:
 
     def send_message(self, message):
         payload = {"chat_id": self.chat_id, "text": message}
-        print(f"Chat: {self.chat_id}")
         try:
             response = requests.post(self.api_url, data=payload)
             response.raise_for_status()
