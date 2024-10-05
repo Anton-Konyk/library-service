@@ -18,7 +18,7 @@ class Borrowing(models.Model):
 
     class Meta:
         verbose_name_plural = "borrowings"
-        ordering = ["-borrow_date", "-expected_return_date", "-actual_return_date"]
+        ordering = ["borrow_date", "expected_return_date", "actual_return_date"]
         constraints = [
             # 1. Expected return date must be after the borrow date.
             models.CheckConstraint(
