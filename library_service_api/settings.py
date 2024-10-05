@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "user",
     "rest_framework.authtoken",
     "borrowings",
+    "django_celery_beat",
 ]
 
 AUTH_USER_MODEL = "user.User"
@@ -149,3 +150,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Celery Configuration Options
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+CELERY_TIMEZONE = "Europe/Bratislava"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
