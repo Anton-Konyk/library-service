@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "borrowings",
     "django_celery_beat",
+    "payment",
 ]
 
 AUTH_USER_MODEL = "user.User"
