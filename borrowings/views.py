@@ -1,3 +1,5 @@
+from datetime import date
+from decimal import Decimal
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -12,6 +14,24 @@ from borrowings.serializers import (
     BorrowingCreateSerializer,
 )
 from helpers.telegram_helper import TelegramHelper
+
+
+def calculate_amount(last_day: date, first_day: date, rate: Decimal) -> int:
+
+    if not isinstance(last_day, date) or not isinstance(first_day, date):
+        raise ValueError("last_day and first_day must have type date.")
+
+    if rate < Decimal("0.00"):
+        raise ValueError("rate must be positive.")
+
+    delta_days = (last_day - first_day).days
+
+    if delta_days < 0:
+        raise ValueError("last_day must be later first_day.")
+
+    amount = Decimal(delta_days) * rate
+
+    return int((amount * 100).quantize(Decimal("0")))
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
