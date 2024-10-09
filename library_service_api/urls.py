@@ -18,10 +18,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from helpers.stripe_helper import CreateStripeSessionView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/book-service/", include("books.urls"), name="book"),
     path("api/v1/users/", include("user.urls", namespace="user")),
     path("api/v1/borrowings-service/", include("borrowings.urls"), name="borrowing"),
     path("api/v1/payment-service/", include("payment.urls"), name="payment"),
+    path(
+        "create-stripe-session/",
+        CreateStripeSessionView.as_view(),
+        name="create-stripe-session",
+    ),
 ]
