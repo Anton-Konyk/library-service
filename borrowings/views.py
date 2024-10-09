@@ -15,7 +15,7 @@ from borrowings.serializers import (
     BorrowingListSerializer,
     BorrowingCreateSerializer,
 )
-from helpers.stripe_helper import CreateStripeSessionView
+from helpers.stripe_helper import create_payment
 from helpers.telegram_helper import TelegramHelper
 
 
@@ -90,8 +90,8 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                     borrowing.borrow_date,
                     borrowing.book.daily_fee,
                 )
-                stripe_helper = CreateStripeSessionView()
-                stripe_helper.create_payment(
+                # stripe_helper = CreateStripeSessionView()
+                create_payment(
                     borrowing, amount=amount, status_payment="G", type_payment="P"
                 )
 
@@ -115,7 +115,6 @@ class BorrowingReturnView(APIView):
 
     def post(self, request, id):
         borrowing = get_object_or_404(Borrowing, id=id)
-
         if borrowing.actual_return_date is None:
             borrowing.actual_return_date = timezone.now().date()
             borrowing.book.inventory += 1
