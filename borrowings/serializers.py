@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from books.serializers import BookSerializer
@@ -48,7 +50,6 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
             "id",
             "borrow_date",
             "expected_return_date",
-            "actual_return_date",
             "book",
             "user",
         )
@@ -59,3 +60,11 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
                 "This book is not available for borrowing as inventory is 0."
             )
         return value
+
+    def validate_expected_return_date(self, expected_return_date):
+        if expected_return_date <= timezone.now().date():
+            raise serializers.ValidationError(
+                "Expected return date must be after borrow date."
+            )
+
+        return expected_return_date
