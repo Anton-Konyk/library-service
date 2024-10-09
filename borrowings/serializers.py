@@ -1,14 +1,33 @@
 from rest_framework import serializers
 
-from books.models import Book
 from books.serializers import BookSerializer
 from borrowings.models import Borrowing
-from user.models import User
+
+# from payment.serializers import (
+#     PaymentListWithoutBorrowingSerializer,
+#     PaymentListSerializer,
+# )
 
 
 class BorrowingListSerializer(serializers.ModelSerializer):
     book = BookSerializer(read_only=True)
     user = serializers.SlugRelatedField(read_only=True, many=False, slug_field="email")
+    payment = serializers.StringRelatedField(
+        many=True, read_only=True, source="payments"
+    )
+
+    class Meta:
+        model = Borrowing
+        fields = (
+            "id",
+            "borrow_date",
+            "expected_return_date",
+            "actual_return_date",
+            "book",
+            "payment",
+            "user",
+        )
+
 
     class Meta:
         model = Borrowing
