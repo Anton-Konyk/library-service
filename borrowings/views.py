@@ -1,5 +1,7 @@
 from datetime import date
 from decimal import Decimal
+
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -13,6 +15,7 @@ from borrowings.serializers import (
     BorrowingListSerializer,
     BorrowingCreateSerializer,
 )
+from helpers.stripe_helper import CreateStripeSessionView
 from helpers.telegram_helper import TelegramHelper
 
 
@@ -73,18 +76,36 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
-        book = serializer.validated_data["book"]
 
-        book.inventory -= 1
-        book.save()
-        borrowing = serializer.save(user=self.request.user)
+        with transaction.atomic():
+            try:
 
-        telegram_helper = TelegramHelper()
-        message = (
-            f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
-            f"Expected return date: {borrowing.expected_return_date}."
-        )
-        telegram_helper.send_message(message)
+                book = serializer.validated_data["book"]
+
+                book.inventory -= 1
+                book.save()
+                borrowing = serializer.save(user=self.request.user)
+                amount = calculate_amount(
+                    borrowing.expected_return_date,
+                    borrowing.borrow_date,
+                    borrowing.book.daily_fee,
+                )
+                stripe_helper = CreateStripeSessionView()
+                stripe_helper.create_payment(
+                    borrowing, amount=amount, status_payment="G", type_payment="P"
+                )
+
+                telegram_helper = TelegramHelper()
+                message = (
+                    f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
+                    f"Expected return date: {borrowing.expected_return_date}."
+                )
+                telegram_helper.send_message(message)
+
+            except Exception as e:
+                transaction.set_rollback(True)
+
+                raise ValueError(f"Error occurred while creating payment: {str(e)}")
 
 
 class BorrowingReturnView(APIView):
