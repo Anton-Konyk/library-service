@@ -28,6 +28,15 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return super().get_serializer_class()
 
 
+class StripeSuccessView(APIView):
+    def get(self, request, *args, **kwargs):
+        session_id = request.query_params.get("session_id")
+        return Response(
+            {"message": "Payment was successful!", "session_id": session_id},
+            status=status.HTTP_200_OK,
+        )
+
+
 class StripeCancelView(APIView):
     def get(self, request):
 
