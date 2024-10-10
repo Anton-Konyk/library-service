@@ -122,3 +122,28 @@ def create_payment(
 
     except Exception as e:
         raise ValidationError({"detail": f"An unexpected error occurred: {str(e)}"})
+
+
+def stripe_success_check(payment: Payment):
+
+    try:
+        session = stripe.checkout.Session.retrieve(payment.session_id)
+
+        if session.payment_status == "paid":
+            payment.status = "D"
+            payment.save()
+
+            return Response(
+                {"message": "Payment was successful."}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": "Payment was not successful."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except stripe.error.StripeError as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
