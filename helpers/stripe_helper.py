@@ -1,5 +1,8 @@
 import os
 
+from django.http import HttpRequest
+from django.urls import reverse
+from rest_framework.response import Response
 from django.core.exceptions import ValidationError
 
 import stripe
@@ -19,14 +22,24 @@ class StripePaymentException(APIException):
     default_code = "stripe_payment_error"
 
 
-def create_stripe_session(amount, quantity=1):
+def create_stripe_session(request, amount, quantity=1, currency="usd"):
+
+    success_url = (
+        request.build_absolute_uri(reverse("borrowings:stripe-success"))
+        + "?session_id={CHECKOUT_SESSION_ID}"
+    )
+    cancel_url = (
+        request.build_absolute_uri(reverse("borrowings:stripe-cancel"))
+        + "?session_id={CHECKOUT_SESSION_ID}"
+    )
+
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[
                 {
                     "price_data": {
-                        "currency": "usd",
+                        "currency": currency,
                         "product_data": {
                             "name": "Payment for the book borrowing",
                         },
@@ -36,8 +49,8 @@ def create_stripe_session(amount, quantity=1):
                 }
             ],
             mode="payment",
-            success_url="http://localhost:8001/success",
-            cancel_url="http://localhost:8001/cancel",
+            success_url=success_url,
+            cancel_url=cancel_url,
         )
         return session
 
@@ -69,6 +82,7 @@ def create_stripe_session(amount, quantity=1):
 
 
 def create_payment(
+    request: HttpRequest,
     borrowing: Borrowing,
     amount: int,
     status_payment: str,
@@ -77,7 +91,7 @@ def create_payment(
 ):
 
     try:
-        session = create_stripe_session(amount, quantity)
+        session = create_stripe_session(request, amount, quantity)
         if status_payment not in dict(STATUS_CHOICES):
             raise ValueError(
                 f"Invalid status value: {status_payment}."
