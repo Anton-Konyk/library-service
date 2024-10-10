@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from borrowings.serializers import BorrowingListSerializer
+from borrowings.serializers import BorrowingListWithoutPaymentSerializer
 from payment.models import Payment
 
 
 class PaymentListSerializer(serializers.ModelSerializer):
-    borrowing = BorrowingListSerializer(read_only=True)
+    borrowing = BorrowingListWithoutPaymentSerializer(read_only=True)
     status = serializers.CharField(source="get_status_display", read_only=True)
     type = serializers.CharField(source="get_type_display", read_only=True)
 

@@ -25,12 +25,4 @@ class Borrowing(models.Model):
                 condition=Q(expected_return_date__gt=F("borrow_date")),
                 name="expected return date must be after the borrow date",
             ),
-            # 2. Actual return date, if provided,
-            # must be after or equal to the borrow date.
-            models.CheckConstraint(
-                condition=Q(actual_return_date__gte=F("borrow_date"))
-                | Q(actual_return_date__isnull=True),
-                name="actual return date must be after or "
-                "equal to the borrow date or null",
-            ),
         ]
