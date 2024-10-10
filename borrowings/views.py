@@ -90,9 +90,13 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                     borrowing.borrow_date,
                     borrowing.book.daily_fee,
                 )
-                # stripe_helper = CreateStripeSessionView()
+
                 create_payment(
-                    borrowing, amount=amount, status_payment="G", type_payment="P"
+                    request=self.request,
+                    borrowing=borrowing,
+                    amount=amount,
+                    status_payment="G",
+                    type_payment="P",
                 )
 
                 telegram_helper = TelegramHelper()
