@@ -115,7 +115,7 @@ def create_payment(
             session_id=session.id,
             money=amount / 100,
         )
-        print(f"Payment objects: {payment}")
+        return payment
 
     except StripePaymentException as e:
         raise StripePaymentException(f"Payment failed: {str(e)}")
