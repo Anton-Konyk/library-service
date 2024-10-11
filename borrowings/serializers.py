@@ -43,6 +43,10 @@ class BorrowingListWithoutPaymentSerializer(serializers.ModelSerializer):
 
 
 class BorrowingCreateSerializer(serializers.ModelSerializer):
+    payment = serializers.StringRelatedField(
+        many=True, read_only=True, source="payments"
+    )
+    url_payment = serializers.SerializerMethodField()
 
     class Meta:
         model = Borrowing
@@ -52,6 +56,8 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
             "expected_return_date",
             "book",
             "user",
+            "payment",
+            "url_payment",
         )
 
     def validate_book(self, value):
@@ -60,6 +66,12 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
                 "This book is not available for borrowing as inventory is 0."
             )
         return value
+
+    def get_url_payment(self, obj):
+        payment = obj.payments.first()
+        if payment:
+            return payment.session_url
+        return None
 
     def validate_expected_return_date(self, expected_return_date):
         if expected_return_date <= timezone.now().date():
