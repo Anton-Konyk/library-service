@@ -18,6 +18,8 @@ from borrowings.serializers import (
 from helpers.stripe_helper import create_payment
 from helpers.telegram_helper import TelegramHelper
 
+FINE_MULTIPLIER = 2
+
 
 def calculate_amount(last_day: date, first_day: date, rate: Decimal) -> int:
 
@@ -126,9 +128,31 @@ class BorrowingReturnView(APIView):
             borrowing.book.save()
             borrowing.save()
 
-            telegram_helper = TelegramHelper()
-            message = f"Book '{borrowing.book.title}' has returned by user {borrowing.user.email}."
-            telegram_helper.send_message(message)
+            if borrowing.actual_return_date > borrowing.expected_return_date:
+                fine_amount = borrowing.book.daily_fee * FINE_MULTIPLIER
+                amount = calculate_amount(
+                    borrowing.actual_return_date,
+                    borrowing.expected_return_date,
+                    fine_amount,
+                )
+
+                payment = create_payment(
+                    request=self.request,
+                    borrowing=borrowing,
+                    amount=amount,
+                    status_payment="G",
+                    type_payment="F",
+                )
+
+                return Response(
+                    {
+                        "user": borrowing.user.email,
+                        "returned_book": borrowing.book.title,
+                        "fine_payment": payment.money,
+                        "url_for_payment": payment.session_url,
+                    },
+                    status=status.HTTP_200_OK,
+                )
 
             return Response(
                 {
