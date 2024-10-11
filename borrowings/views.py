@@ -91,7 +91,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                     borrowing.book.daily_fee,
                 )
 
-                create_payment(
+                payment = create_payment(
                     request=self.request,
                     borrowing=borrowing,
                     amount=amount,
@@ -102,7 +102,8 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 telegram_helper = TelegramHelper()
                 message = (
                     f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
-                    f"Expected return date: {borrowing.expected_return_date}."
+                    f"Expected return date: {borrowing.expected_return_date}.\n"
+                    f"Your link for payment: {payment.session_url}"
                 )
                 telegram_helper.send_message(message)
 
