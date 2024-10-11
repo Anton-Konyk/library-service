@@ -43,6 +43,9 @@ class BorrowingListWithoutPaymentSerializer(serializers.ModelSerializer):
 
 
 class BorrowingCreateSerializer(serializers.ModelSerializer):
+    payment = serializers.StringRelatedField(
+        many=True, read_only=True, source="payments"
+    )
 
     class Meta:
         model = Borrowing
@@ -52,6 +55,7 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
             "expected_return_date",
             "book",
             "user",
+            "payment",
         )
 
     def validate_book(self, value):
