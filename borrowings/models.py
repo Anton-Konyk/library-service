@@ -7,7 +7,7 @@ from user.models import User
 
 
 class Borrowing(models.Model):
-    borrow_date = models.DateField(auto_now=timezone.now().date())
+    borrow_date = models.DateField(auto_now_add=True)
     expected_return_date = models.DateField()
     actual_return_date = models.DateField(blank=True, null=True, default=None)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="borrowings")
