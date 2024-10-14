@@ -124,6 +124,25 @@ def create_payment(
         raise ValidationError({"detail": f"An unexpected error occurred: {str(e)}"})
 
 
+def renew_payment(request: HttpRequest, payment: Payment):
+
+    try:
+        amount = int(payment.money * 100)
+        session = create_stripe_session(request, amount)
+        payment.session_url = session.url
+        payment.session_id = session.id
+        payment.status = "G"
+        payment.save()
+
+        return payment
+
+    except StripePaymentException as e:
+        raise StripePaymentException(f"Payment failed: {str(e)}")
+
+    except Exception as e:
+        raise ValidationError({"detail": f"An unexpected error occurred: {str(e)}"})
+
+
 def stripe_success_check(payment: Payment):
 
     try:
@@ -140,6 +159,26 @@ def stripe_success_check(payment: Payment):
             return Response(
                 {"error": "Payment was not successful."},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except stripe.error.StripeError as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def stripe_expired_check(payment: Payment):
+
+    try:
+        session = stripe.checkout.Session.retrieve(payment.session_id)
+
+        if session.status == "expired":
+            payment.status = "E"
+            payment.save()
+
+            return Response(
+                {"message": "The session is expired."}, status=status.HTTP_200_OK
             )
 
     except stripe.error.StripeError as e:
