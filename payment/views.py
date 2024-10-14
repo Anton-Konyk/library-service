@@ -1,9 +1,11 @@
 import stripe
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from helpers.stripe_helper import stripe_success_check
 from payment.models import Payment
 from payment.serializers import PaymentListSerializer
 
@@ -31,6 +33,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
 class StripeSuccessView(APIView):
     def get(self, request, *args, **kwargs):
         session_id = request.query_params.get("session_id")
+        payment = get_object_or_404(Payment, session_id=session_id)
+        stripe_success_check(payment)
         return Response(
             {"message": "Payment was successful!", "session_id": session_id},
             status=status.HTTP_200_OK,
