@@ -118,53 +118,58 @@ class BorrowingReturnView(APIView):
 
     serializer_class = BorrowingCreateSerializer
 
+    @transaction.atomic
     def post(self, request, id):
-        borrowing = get_object_or_404(Borrowing, id=id)
-        if borrowing.actual_return_date is None:
-            borrowing.actual_return_date = timezone.now().date()
-            borrowing.book.inventory += 1
-            borrowing.book.save()
-            borrowing.save()
+        try:
 
-            if borrowing.actual_return_date > borrowing.expected_return_date:
-                fine_amount = borrowing.book.daily_fee * FINE_MULTIPLIER
-                amount = calculate_amount(
-                    borrowing.actual_return_date,
-                    borrowing.expected_return_date,
-                    fine_amount,
-                )
+            borrowing = get_object_or_404(Borrowing, id=id)
+            if borrowing.actual_return_date is None:
+                borrowing.actual_return_date = timezone.now().date()
+                borrowing.book.inventory += 1
+                borrowing.book.save()
+                borrowing.save()
 
-                payment = create_payment(
-                    request=self.request,
-                    borrowing=borrowing,
-                    amount=amount,
-                    status_payment="G",
-                    type_payment="F",
-                )
+                if borrowing.actual_return_date > borrowing.expected_return_date:
+                    fine_amount = borrowing.book.daily_fee * FINE_MULTIPLIER
+                    amount = calculate_amount(
+                        borrowing.actual_return_date,
+                        borrowing.expected_return_date,
+                        fine_amount,
+                    )
+
+                    payment = create_payment(
+                        request=self.request,
+                        borrowing=borrowing,
+                        amount=amount,
+                        status_payment="G",
+                        type_payment="F",
+                    )
+
+                    return Response(
+                        {
+                            "user": borrowing.user.email,
+                            "returned_book": borrowing.book.title,
+                            "fine_payment": payment.money,
+                            "url_for_payment": payment.session_url,
+                        },
+                        status=status.HTTP_200_OK,
+                    )
 
                 return Response(
                     {
-                        "user": borrowing.user.email,
-                        "returned_book": borrowing.book.title,
-                        "fine_payment": payment.money,
-                        "url_for_payment": payment.session_url,
+                        "detail": f"User {borrowing.user.email} have "
+                        f"returned book {borrowing.book.title} successfully."
                     },
                     status=status.HTTP_200_OK,
                 )
-
-            return Response(
-                {
-                    "detail": f"User {borrowing.user.email} have "
-                    f"returned book {borrowing.book.title} successfully."
-                },
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {
-                    "detail": f"User {borrowing.user.email} "
-                    f"already have returned book {borrowing.book.title} "
-                    f"on {borrowing.actual_return_date}"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            else:
+                return Response(
+                    {
+                        "detail": f"User {borrowing.user.email} "
+                        f"already have returned book {borrowing.book.title} "
+                        f"on {borrowing.actual_return_date}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except Exception as e:
+            raise ValueError(f"Error occurred while creating payment: {str(e)}")
