@@ -147,3 +147,23 @@ def stripe_success_check(payment: Payment):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def stripe_expired_check(payment: Payment):
+
+    try:
+        session = stripe.checkout.Session.retrieve(payment.session_id)
+
+        if session.status == "expired":
+            payment.status = "E"
+            payment.save()
+
+            return Response(
+                {"message": "The session is expired."}, status=status.HTTP_200_OK
+            )
+
+    except stripe.error.StripeError as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
