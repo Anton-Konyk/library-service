@@ -133,7 +133,7 @@ def renew_payment(request: HttpRequest, payment: Payment):
         payment.session_id = session.id
         payment.status = "G"
         payment.save()
-        print(f"Payment renewed: {payment}")
+
         return payment
 
     except StripePaymentException as e:
