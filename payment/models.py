@@ -6,6 +6,7 @@ from borrowings.models import Borrowing
 STATUS_CHOICES = (
     ("G", "PENDING"),
     ("D", "PAID"),
+    ("E", "EXPIRED"),
 )
 
 TYPE_CHOICES = (
