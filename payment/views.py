@@ -1,11 +1,12 @@
 import stripe
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from helpers.stripe_helper import stripe_success_check
+from helpers.stripe_helper import stripe_success_check, renew_payment
 from payment.models import Payment
 from payment.serializers import PaymentListSerializer
 
@@ -74,3 +75,35 @@ class StripeCancelView(APIView):
             return Response(
                 {"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+class RenewPaymentSessionView(APIView):
+    """Renew the Payment session"""
+
+    serializer_class = PaymentListSerializer
+
+    @transaction.atomic
+    def post(self, request, id):
+        try:
+
+            payment = get_object_or_404(Payment, id=id)
+            if payment.status == "E":
+                renew_payment(request, payment)
+
+                return Response(
+                    {
+                        "user": payment.borrowing.user.email,
+                        "payment_id": payment.id,
+                        "payment_status": payment.status,
+                        "url_for_payment": payment.session_url,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"message": "This Payment has not status EXPIRED."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        except Exception as e:
+            raise ValueError(f"Error occurred while creating payment: {str(e)}")
