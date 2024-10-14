@@ -6,7 +6,9 @@ from django.db.models import Q
 from django.utils import timezone
 
 from borrowings.models import Borrowing
+from helpers.stripe_helper import stripe_expired_check
 from helpers.telegram_helper import TelegramHelper
+from payment.models import Payment
 
 
 @shared_task
@@ -37,3 +39,15 @@ def borrowing_notification() -> None:
         telegram_helper = TelegramHelper()
         message = f"“No borrowings overdue today!”"
         telegram_helper.send_message(message)
+
+
+@shared_task
+def track_expired_stripe_sessions() -> None:
+    """
+    The function is checking Stripe Session for expiration
+    If the session is expired - Payment should be also marked as EXPIRED (new status)
+    """
+    queryset = Payment.objects.filter(status__exact="G")
+    if queryset.exists():
+        for payment in queryset:
+            stripe_expired_check(payment)
