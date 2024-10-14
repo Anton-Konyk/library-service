@@ -124,6 +124,25 @@ def create_payment(
         raise ValidationError({"detail": f"An unexpected error occurred: {str(e)}"})
 
 
+def renew_payment(request: HttpRequest, payment: Payment):
+
+    try:
+        amount = int(payment.money * 100)
+        session = create_stripe_session(request, amount)
+        payment.session_url = session.url
+        payment.session_id = session.id
+        payment.status = "G"
+        payment.save()
+        print(f"Payment renewed: {payment}")
+        return payment
+
+    except StripePaymentException as e:
+        raise StripePaymentException(f"Payment failed: {str(e)}")
+
+    except Exception as e:
+        raise ValidationError({"detail": f"An unexpected error occurred: {str(e)}"})
+
+
 def stripe_success_check(payment: Payment):
 
     try:
