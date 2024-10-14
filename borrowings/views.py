@@ -77,42 +77,40 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             return BorrowingCreateSerializer
         return super().get_serializer_class()
 
+    @transaction.atomic()
     def perform_create(self, serializer):
 
-        with transaction.atomic():
-            try:
+        try:
 
-                book = serializer.validated_data["book"]
+            book = serializer.validated_data["book"]
 
-                book.inventory -= 1
-                book.save()
-                borrowing = serializer.save(user=self.request.user)
-                amount = calculate_amount(
-                    borrowing.expected_return_date,
-                    borrowing.borrow_date,
-                    borrowing.book.daily_fee,
-                )
+            book.inventory -= 1
+            book.save()
+            borrowing = serializer.save(user=self.request.user)
+            amount = calculate_amount(
+                borrowing.expected_return_date,
+                borrowing.borrow_date,
+                borrowing.book.daily_fee,
+            )
 
-                payment = create_payment(
-                    request=self.request,
-                    borrowing=borrowing,
-                    amount=amount,
-                    status_payment="G",
-                    type_payment="P",
-                )
+            payment = create_payment(
+                request=self.request,
+                borrowing=borrowing,
+                amount=amount,
+                status_payment="G",
+                type_payment="P",
+            )
 
-                telegram_helper = TelegramHelper()
-                message = (
-                    f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
-                    f"Expected return date: {borrowing.expected_return_date}.\n"
-                    f"Your link for payment: {payment.session_url}"
-                )
-                telegram_helper.send_message(message)
+            telegram_helper = TelegramHelper()
+            message = (
+                f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
+                f"Expected return date: {borrowing.expected_return_date}.\n"
+                f"Your link for payment: {payment.session_url}"
+            )
+            telegram_helper.send_message(message)
 
-            except Exception as e:
-                transaction.set_rollback(True)
-
-                raise ValueError(f"Error occurred while creating payment: {str(e)}")
+        except Exception as e:
+            raise ValueError(f"Error occurred while creating payment: {str(e)}")
 
 
 class BorrowingReturnView(APIView):
