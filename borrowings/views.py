@@ -81,7 +81,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
 
         try:
-
             book = serializer.validated_data["book"]
 
             book.inventory -= 1
@@ -113,6 +112,30 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             raise ValueError(f"Error occurred while creating payment: {str(e)}")
+
+    def create(self, request, *args, **kwargs):
+        """
+        Before creating borrowing - simply check the number of pending payments
+        If at least one exists - forbid borrowing
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        queryset = self.queryset.filter(user=self.request.user).filter(
+            Q(payments__status="G") | Q(payments__status="E")
+        )
+
+        if queryset.count() > 0:
+            return Response(
+                {
+                    "massage": "You have at least one unpaid payment. "
+                    "You can't borrow new book.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        self.perform_create(serializer)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class BorrowingReturnView(APIView):
