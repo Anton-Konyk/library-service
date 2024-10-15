@@ -101,6 +101,8 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 type_payment="P",
             )
 
+            serializer.context["payment"] = payment
+
             telegram_helper = TelegramHelper()
             message = (
                 f"Book '{borrowing.book.title}' has borrowed by user {borrowing.user.email}.\n"
