@@ -68,7 +68,7 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
         return value
 
     def get_url_payment(self, obj):
-        payment = obj.payments.first()
+        payment = self.context.get("payment")
         if payment:
             return payment.session_url
         return None
