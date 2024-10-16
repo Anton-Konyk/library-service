@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helpers.stripe_helper import stripe_success_check, renew_payment
+from helpers.telegram_helper import TelegramHelper
 from payment.models import Payment
 from payment.serializers import PaymentListSerializer
 
@@ -36,6 +37,11 @@ class StripeSuccessView(APIView):
         session_id = request.query_params.get("session_id")
         payment = get_object_or_404(Payment, session_id=session_id)
         stripe_success_check(payment)
+
+        telegram_helper = TelegramHelper()
+        message = f"Successful payment {payment.money} USD."
+        telegram_helper.send_message(message)
+
         return Response(
             {"message": "Payment was successful!", "session_id": session_id},
             status=status.HTTP_200_OK,
