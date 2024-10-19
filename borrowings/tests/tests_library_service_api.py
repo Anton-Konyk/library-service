@@ -297,10 +297,17 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
         borrowing_id = res_borrowing_user.data["id"]
         borrowing_return_url = reverse("borrowings:return", args=[borrowing_id])
         res_return_user = self.client.post(borrowing_return_url)
+        book_id = res_borrowing_user.data["book"]
+        inventory_book_before_first_borrowing = Book.objects.get(id=book_id).inventory
         borrowing_return_url = reverse("borrowings:return", args=[borrowing_id])
+        inventory_book_before_second_borrowing = Book.objects.get(id=book_id).inventory
         res_second_return_user = self.client.post(borrowing_return_url)
         self.assertEqual(
             res_second_return_user.data["detail"],
             f"User {self.user.email} already have returned book "
             f"Test Title on {datetime.date.today()}",
+        )
+        self.assertEqual(
+            inventory_book_before_first_borrowing,
+            inventory_book_before_second_borrowing,
         )
