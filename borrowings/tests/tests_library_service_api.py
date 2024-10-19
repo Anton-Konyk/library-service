@@ -222,3 +222,27 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
         self.assertEqual(len(res_list_user.data), 1)
         self.assertEqual(res_list_user.data[0]["user"], self.user.email)
 
+    def test_admin_list_borrowings(self):
+
+        self.client.force_authenticate(self.user)
+        book_user = sample_book()
+        borrow_data = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=1),
+            "book": book_user.id,
+            "user": self.user.id,
+        }
+        res_user = self.client.post(BORROWING_LIST_URL, borrow_data)
+        res_list_user = self.client.get(BORROWING_LIST_URL)
+
+        self.client.force_authenticate(self.admin_user)
+        book_admin = sample_book(title="Test Title Admin", daily_fee=2)
+        borrow_data = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=2),
+            "book": book_admin.id,
+            "user": self.user.id,
+        }
+        res_admin = self.client.post(BORROWING_LIST_URL, borrow_data)
+        res_list_admin = self.client.get(BORROWING_LIST_URL)
+
+        self.assertIn(res_list_user.data[0], res_list_admin.data)
+
