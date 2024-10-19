@@ -170,7 +170,6 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
             "user": self.user.id,
         }
         res = self.client.post(BORROWING_LIST_URL, borrow_data)
-        print(f"Res data: {res.data}")
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
             "This book is not available for borrowing as inventory is 0.",
