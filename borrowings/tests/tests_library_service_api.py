@@ -266,3 +266,22 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
             f"User {self.user.email} have " f"returned book {book_title} successfully.",
         )
 
+    def test_return_borrowing_inventory(self):
+        self.client.force_authenticate(self.user)
+        book = sample_book()
+        borrow_data = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=1),
+            "book": book.id,
+            "user": self.user.id,
+        }
+        res_borrowing_user = self.client.post(BORROWING_LIST_URL, borrow_data)
+        book_id = res_borrowing_user.data["book"]
+        inventory_book_when_borrowing = Book.objects.get(id=book_id).inventory
+        borrowing_id = res_borrowing_user.data["id"]
+
+        borrowing_return_url = reverse("borrowings:return", args=[borrowing_id])
+        res_return_user = self.client.post(borrowing_return_url)
+
+        inventory_after_borrow = Book.objects.get(id=book_id).inventory
+        self.assertEqual(inventory_book_when_borrowing + 1, inventory_after_borrow)
+
