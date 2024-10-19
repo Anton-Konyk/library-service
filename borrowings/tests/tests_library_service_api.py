@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -13,6 +14,7 @@ from borrowings.serializers import BorrowingListSerializer
 BOOK_LIST_URL = reverse("books:book-list")
 BORROWING_LIST_URL = reverse("borrowings:borrowing-list")
 PAYMENT_LIST_URL = reverse("payment:payment-list")
+BORROWING_DAYS = 3
 
 
 def sample_book(**params) -> Book:
@@ -178,3 +180,24 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
 
     def test_auth_check_amount_borrowing(self):
         pass
+        self.client.force_authenticate(self.user)
+        book = Book.objects.create(
+            title="Test Title",
+            author="Test Author",
+            cover="H",
+            inventory=10,
+            daily_fee=1.2,
+        )
+        borrow_data = {
+            "expected_return_date": datetime.date.today()
+            + datetime.timedelta(days=BORROWING_DAYS),
+            "book": book.id,
+            "user": self.user.id,
+        }
+        payment_amount = Decimal(book.daily_fee * BORROWING_DAYS).quantize(
+            Decimal("0.01")
+        )
+        res = self.client.post(BORROWING_LIST_URL, borrow_data)
+        result = Decimal(res.data["payment"][0].split()[3]).quantize(Decimal("0.01"))
+        self.assertEqual(result, payment_amount)
+
