@@ -179,7 +179,6 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
         )
 
     def test_auth_check_amount_borrowing(self):
-        pass
         self.client.force_authenticate(self.user)
         book = Book.objects.create(
             title="Test Title",
@@ -200,4 +199,26 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
         res = self.client.post(BORROWING_LIST_URL, borrow_data)
         result = Decimal(res.data["payment"][0].split()[3]).quantize(Decimal("0.01"))
         self.assertEqual(result, payment_amount)
+
+    def test_auth_list_borrowings(self):
+        book = sample_book()
+
+        self.client.force_authenticate(self.admin_user)
+        borrow_data = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=1),
+            "book": book.id,
+            "user": self.user.id,
+        }
+        res_admin = self.client.post(BORROWING_LIST_URL, borrow_data)
+
+        self.client.force_authenticate(self.user)
+        borrow_data = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=2),
+            "book": book.id,
+            "user": self.user.id,
+        }
+        res_user = self.client.post(BORROWING_LIST_URL, borrow_data)
+        res_list_user = self.client.get(BORROWING_LIST_URL)
+        self.assertEqual(len(res_list_user.data), 1)
+        self.assertEqual(res_list_user.data[0]["user"], self.user.email)
 
