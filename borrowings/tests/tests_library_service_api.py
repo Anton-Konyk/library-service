@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from books.models import Book
 from borrowings.models import Borrowing
 from borrowings.serializers import BorrowingListSerializer
+from payment.models import Payment
 
 BOOK_LIST_URL = reverse("books:book-list")
 BORROWING_LIST_URL = reverse("borrowings:borrowing-list")
@@ -311,3 +312,71 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
             inventory_book_before_first_borrowing,
             inventory_book_before_second_borrowing,
         )
+
+    def test_auth_is_active_list_borrowing(self):
+        self.client.force_authenticate(self.admin_user)
+        book_admin = sample_book()
+        borrow_data_admin = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=1),
+            "book": book_admin.id,
+            "user": self.user.id,
+        }
+        res_borrowing_admin = self.client.post(BORROWING_LIST_URL, borrow_data_admin)
+        borrowing_admin_id = res_borrowing_admin.data["id"]
+        book_admin_id = res_borrowing_admin.data["book"]
+
+        self.client.force_authenticate(self.user)
+        book_user_1 = sample_book(
+            title="Test Title User 1",
+            author="Test Author User 1",
+            cover="S",
+            inventory=22,
+            daily_fee=1.4,
+        )
+        borrow_data_user_1 = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=2),
+            "book": book_user_1.id,
+            "user": self.user.id,
+        }
+        res_borrowing_user_1 = self.client.post(BORROWING_LIST_URL, borrow_data_user_1)
+        borrowing_user_1_id = res_borrowing_user_1.data["id"]
+
+        borrowing_return_url = reverse("borrowings:return", args=[borrowing_user_1_id])
+        res_return_user = self.client.post(borrowing_return_url)
+
+        payment_user_1 = Payment.objects.get(borrowing=borrowing_user_1_id)
+        payment_user_1.status = "D"
+        payment_user_1.save()
+
+        book_user_2 = sample_book(
+            title="Test Title User 2",
+            author="Test Author User 2",
+            cover="H",
+            inventory=21,
+            daily_fee=1.2,
+        )
+        borrow_data_user_2 = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=3),
+            "book": book_user_2.id,
+            "user": self.user.id,
+        }
+        res_borrowing_user_2 = self.client.post(BORROWING_LIST_URL, borrow_data_user_2)
+        # borrowing_user_2_id = res_borrowing_user_2.data["id"]
+
+        is_active_parameter = "1"
+        res_list_user = self.client.get(
+            BORROWING_LIST_URL, {"is_active": {is_active_parameter}}
+        )
+
+        print(f"res_list_user.data: {res_list_user.data}")
+        self.assertEqual(len(res_list_user.data), 1)
+        self.assertEqual(res_list_user.data[0]["user"], self.user.email)
+
+        serialize_user_1 = BorrowingListSerializer(res_borrowing_user_1)
+        serialize_user_2 = BorrowingListSerializer(res_borrowing_user_2)
+        serialize_admin = BorrowingListSerializer(res_borrowing_admin)
+        print(f"serialize_user_2.data: {serialize_user_2.data}")
+
+        self.assertIn(serialize_user_2.data, res_list_user.data)
+        self.assertNotIn(serialize_user_1.data, res_list_user.data)
+        self.assertNotIn(serialize_admin.data, res_list_user.data)
