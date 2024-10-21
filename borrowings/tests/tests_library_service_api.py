@@ -361,21 +361,23 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
             "user": self.user.id,
         }
         res_borrowing_user_2 = self.client.post(BORROWING_LIST_URL, borrow_data_user_2)
-        # borrowing_user_2_id = res_borrowing_user_2.data["id"]
+        borrowing_user_2_id = res_borrowing_user_2.data["id"]
 
         is_active_parameter = "1"
         res_list_user = self.client.get(
             BORROWING_LIST_URL, {"is_active": {is_active_parameter}}
         )
 
-        print(f"res_list_user.data: {res_list_user.data}")
         self.assertEqual(len(res_list_user.data), 1)
         self.assertEqual(res_list_user.data[0]["user"], self.user.email)
 
-        serialize_user_1 = BorrowingListSerializer(res_borrowing_user_1)
-        serialize_user_2 = BorrowingListSerializer(res_borrowing_user_2)
-        serialize_admin = BorrowingListSerializer(res_borrowing_admin)
-        print(f"serialize_user_2.data: {serialize_user_2.data}")
+        borrowing_user_1 = Borrowing.objects.get(id=borrowing_user_1_id)
+        borrowing_user_2 = Borrowing.objects.get(id=borrowing_user_2_id)
+        borrowing_admin = Borrowing.objects.get(id=borrowing_admin_id)
+
+        serialize_user_1 = BorrowingListSerializer(borrowing_user_1)
+        serialize_user_2 = BorrowingListSerializer(borrowing_user_2)
+        serialize_admin = BorrowingListSerializer(borrowing_admin)
 
         self.assertIn(serialize_user_2.data, res_list_user.data)
         self.assertNotIn(serialize_user_1.data, res_list_user.data)
