@@ -4,7 +4,7 @@ API service for library management system written on DRF,
 in which Admin can manage books and users borrowings, including payment processes.
 Users can create account to borrowing books.
 The structure od database you can see: 
-![architecture.png](architecture.png)
+![architecture.png](Demo screenshots/architecture.png)
 
 
 ## Installing / Getting started
@@ -22,7 +22,7 @@ create .env file (see example: [example.env](example.env) )
 docker-compose build
 docker-compose up
 http://127.0.0.1:8001/api/v1/doc/swagger/  # API documentation
-![swagger.png](swagger.png)
+![swagger.png](Demo screenshots/swagger.png)
 If you need create superuser account:
 # After docker-compose up
 docker ps
@@ -36,8 +36,8 @@ exit
 ## Features
 
 * JWT authentication functionality for User (email and password for first registration)
-* ![create_user.png](create_user.png)
-* ![getting_token.png](getting_token.png)
+* ![create_user.png](Demo screenshots/create_user.png)
+* ![getting_token.png](Demo screenshots/getting_token.png)
 * Manage books inventory:
 - Is Admin users can create/update/delete books
 - All users (even those not authenticated) can see to list books
@@ -54,7 +54,7 @@ exit
   Telegram chat about each overdue separately with detailed information.
   If no borrowings are overdue for that day - sends a “No borrowings overdue today!” 
   notification.
-* Powerful admin panel for advanced management ![admin_console.png](admin_console.png)
+* Powerful admin panel for advanced management ![admin_console.png](Demo screenshots/admin_console.png)
 * Handle payments by Stripe:
 - Calculate the total price of borrowing and set it as the unit amount
 - Automatically creation payment for a new borrowing
@@ -73,8 +73,8 @@ branch. Pull requests are warmly welcome.
 
 
 ## Demo
-![architecture.png](architecture.png)
-![create_user.png](create_user.png)
-![getting_token.png](getting_token.png)
-![admin_console.png](admin_console.png)
-![swagger.png](swagger.png)
+![architecture.png](Demo screenshots/architecture.png)
+![create_user.png](Demo screenshots/create_user.png)
+![getting_token.png](Demo screenshots/getting_token.png)
+![admin_console.png](Demo screenshots/admin_console.png)
+![swagger.png](Demo screenshots/swagger.png)
