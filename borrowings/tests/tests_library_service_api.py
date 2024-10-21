@@ -515,3 +515,71 @@ class AuthenticatedLibraryServiceApiTests(TestCase):
         self.assertIn(serialize_user_2.data, res_list_user.data)
         self.assertNotIn(serialize_user_1.data, res_list_user.data)
         self.assertNotIn(serialize_admin.data, res_list_user.data)
+
+    def test_admin_is_active_and_user_id_list_borrowing_not_active(self):
+        self.client.force_authenticate(self.user)
+        book_user_1 = sample_book(
+            title="Test Title User 1",
+            author="Test Author User 1",
+            cover="S",
+            inventory=22,
+            daily_fee=1.4,
+        )
+        borrow_data_user_1 = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=2),
+            "book": book_user_1.id,
+            "user": self.user.id,
+        }
+        res_borrowing_user_1 = self.client.post(BORROWING_LIST_URL, borrow_data_user_1)
+        borrowing_user_1_id = res_borrowing_user_1.data["id"]
+
+        borrowing_return_url = reverse("borrowings:return", args=[borrowing_user_1_id])
+        res_return_user = self.client.post(borrowing_return_url)
+
+        payment_user_1 = Payment.objects.get(borrowing=borrowing_user_1_id)
+        payment_user_1.status = "D"
+        payment_user_1.save()
+
+        book_user_2 = sample_book(
+            title="Test Title User 2",
+            author="Test Author User 2",
+            cover="H",
+            inventory=21,
+            daily_fee=1.2,
+        )
+        borrow_data_user_2 = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=3),
+            "book": book_user_2.id,
+            "user": self.user.id,
+        }
+        res_borrowing_user_2 = self.client.post(BORROWING_LIST_URL, borrow_data_user_2)
+        borrowing_user_2_id = res_borrowing_user_2.data["id"]
+
+        self.client.force_authenticate(self.admin_user)
+        book_admin = sample_book()
+        borrow_data_admin = {
+            "expected_return_date": datetime.date.today() + datetime.timedelta(days=1),
+            "book": book_admin.id,
+            "user": self.user.id,
+        }
+        res_borrowing_admin = self.client.post(BORROWING_LIST_URL, borrow_data_admin)
+        borrowing_admin_id = res_borrowing_admin.data["id"]
+
+        is_active_parameter = "0"
+        user_id = res_borrowing_user_2.data["user"]
+        res_list_user = self.client.get(
+            BORROWING_LIST_URL,
+            {"is_active": {is_active_parameter}, "user_id": {user_id}},
+        )
+
+        borrowing_user_1 = Borrowing.objects.get(id=borrowing_user_1_id)
+        borrowing_user_2 = Borrowing.objects.get(id=borrowing_user_2_id)
+        borrowing_admin = Borrowing.objects.get(id=borrowing_admin_id)
+
+        serialize_user_1 = BorrowingListSerializer(borrowing_user_1)
+        serialize_user_2 = BorrowingListSerializer(borrowing_user_2)
+        serialize_admin = BorrowingListSerializer(borrowing_admin)
+
+        self.assertNotIn(serialize_user_2.data, res_list_user.data)
+        self.assertIn(serialize_user_1.data, res_list_user.data)
+        self.assertNotIn(serialize_admin.data, res_list_user.data)
