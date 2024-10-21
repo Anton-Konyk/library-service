@@ -6,7 +6,7 @@ asgiref==3.8.1
 attrs==24.2.0
 babel==2.16.0
 billiard==4.2.1
-black==24.8.0
+black==24.10.0
 celery==5.4.0
 certifi==2024.8.30
 charset-normalizer==3.3.2
@@ -23,11 +23,15 @@ django-money==3.5.3
 django-timezone-field==7.0
 djangorestframework==3.15.2
 djangorestframework-simplejwt==5.3.1
+drf-spectacular==0.27.2
 flower==2.0.1
 frozenlist==1.4.1
 humanize==4.11.0
 idna==3.10
+inflection==0.5.1
 iniconfig==2.0.0
+jsonschema==4.23.0
+jsonschema-specifications==2024.10.1
 kombu==5.4.2
 multidict==6.1.0
 mypy-extensions==1.0.0
@@ -46,8 +50,11 @@ python-crontab==3.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.2
+PyYAML==6.0.2
 redis==5.1.1
+referencing==0.35.1
 requests==2.32.3
+rpds-py==0.20.0
 setuptools==75.1.0
 six==1.16.0
 sqlparse==0.5.1
@@ -55,6 +62,7 @@ stripe==11.1.0
 tornado==6.4.1
 typing_extensions==4.12.2
 tzdata==2024.2
+uritemplate==4.1.1
 urllib3==2.2.3
 vine==5.1.0
 wcwidth==0.2.13

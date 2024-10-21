@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "borrowings",
     "django_celery_beat",
     "payment",
+    "drf_spectacular",
 ]
 
 AUTH_USER_MODEL = "user.User"
@@ -83,16 +84,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "library_service_api.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
 
 DATABASES = {
     "default": {
@@ -132,6 +123,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -139,6 +131,19 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZE",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Library Service API",
+    "DESCRIPTION": "Documentation for RESTful " "API for a library service platform.",
+    "VERSION": "1.0.0",
+    "SERVER_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "defaultModelRendering": "model",
+        "defaultModelsExpanDepth": 2,
+        "defaultModelExpanDepth": 2,
+    },
 }
 
 # Internationalization
