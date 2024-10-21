@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -69,6 +70,27 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             return queryset
 
         return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "is_active",
+                type={"type": "string", "items": {"type": "name"}},
+                description="Filtering by active borrowings (still not returned - 1, "
+                "already returned - 0) ex. ?is_active=1",
+            ),
+            OpenApiParameter(
+                "user_id",
+                type={"type": "integer", "items": {"type": "id"}},
+                description="Filter by user id for admin users, so admin can see "
+                "all users’ borrowings, if not specified, but if "
+                "specified - only for concrete user ex. ?user_id=2",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of routes."""
+        return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:
